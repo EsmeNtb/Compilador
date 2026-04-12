@@ -1,0 +1,73 @@
+
+# Numers
+    1 = 'aw'
+    2 = "mune"
+    3 = "pxey"
+    4 = "tsìng"
+    5 = "mrr"
+    6 = "pukap"
+    7 = "kinä"
+
+    10 = "vol"
+    20 = "mevol"
+    30 = "pxevol"
+    40 = "tsìvol"
+    50 = "mrrvol"
+    60 = "puvol"
+    70 = "kivol"
+
+    100 = "zam"
+    1000 = "vozam"
+    10000 = "zazam"
+
+Phrases
+    "Hello" = "kaltxì"
+    "I see you"= "oel ngati kameie"
+    "Are you well" | "Do you have peace" = "ngaru lu fpom srak"
+    "What are you called?" | "What's your name?" = "fyape syaw fko ngar?"
+    "I am called " = "Oeru syaw"
+    "And to you?" = "ngaru tut?"
+    "Please" = "rutxe"
+    "Thanks" = "irayo"
+    "No need" | "You're welcome" = "kea tìkin"
+    "Pleasurably" | "You're welcome" = "nìprrte"
+    "Nice to meet you" = "smon nìprrte"
+    "Welcome" = "zola'u nìprrte"
+    "Happy to visit" = "frrfeien"
+    "How old are you?" = "Ngari solaleww zìsìt a"
+    "I am _ year old" = "Oeri solalew zìsìt a "
+    "Where do you come from?" = "nga za'u ftu peseng?"
+    "I come from" = "za'u oe ftu"
+    "I love you" = "nga yawne lu oer"
+    "Until next time" = "hayalovay"
+    "See you soon" = "kíyevame"
+    "(May)Eyaw (be) with you" = "Eywa ngahu"
+    "I know" = "oe omum"
+    "Calmness" = "mawey"
+    "Village" = "tsray"
+    "Father" = "sempul"
+    "Mother" = "sa'nok"
+
+cIdioms
+    "Mantis doesn’t whistle; don’t expect someone to do something that isn’t in their inherent nature" = "Fwäkì ke fwefwi"
+    "The prey eats the hunter; everything goes wrong that can." = "taronyunt tom smarìl"
+
+Questions(Enum)
+    "What? Which thing?" = "peu, 'upe"
+    "Who?" = "pesu, tupe"
+    "How?" = "pefya, fyape"
+    "What? Which action?" = "pehem, kempe"
+    "When?" = "pehrr, krrpe"
+    "Why?" = "pelun, lumpe"
+    "Where?" = "peseng, tsengpe" 
+
+SampleResponses
+    "this,this thing" = "fì'u"
+    "like this" = "fìfya"
+    "this (action)" = "fìkem"
+    "here" = "fitseng(e)" 
+    "that, that thing" = "tsa'u"
+    "that person" = "tsatu"
+    "that (action)" = "tsakem"
+    "then" = "tsakrr"
+    "there" = "tsatseng"
