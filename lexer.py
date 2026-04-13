@@ -156,6 +156,9 @@ def getToken(imprime = True):
 
             if imprime:
                 print(token, '=', tokenString)
+                
+                if token == TokenType.ERROR:
+                    printError("en la formación del token", posicion -1)
             return token, tokenString
         
         elif currentState == StateType.DONE and col == 5:
