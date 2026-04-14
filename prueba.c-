@@ -1,12 +1,37 @@
-tawtute eyktan
-kaltxi eylan
 Pandora 100% > Rrta
 Eywa : 301
-atan atxkxe , ipu eylan, & irayo tawtute
 402 {} d03halñ 
 ~aho 
 Pandora := 145
 <spaw spono -c|23. + tinawri tìnawri tautral
-~ tìnomum kewong. You are a kewong. Eywa kemuia aaa* ][],
+~ tìnomum kewong. You are a kewong. Eywa kemuia aaa* }[],
 
 { int mnloc ( int a[], int low, int high)}
+
+
+int main(void) { 
+    return 0;
+}
+
+""" Eywa irayo ! ~ % . """
+
+/* Un programa para realizar el algoritmo
+de Euclides para calcular mcd  EOF que debe ignorar $/
+
+int 3gcd (int u, int v)
+{   if4 (v == 0) return u;
+    else return gcd(v,u-u/vv);
+    /* u-u/vv == u mod v/
+    23 !90 @
+}
+
+void main(void)
+{   int x; int y;
+    x = input(); y = input();
+    output(gcd(x,y));
+}
+
+/* Unclosed comment
+
+/*  dndcsklñ */
+lña203

@@ -1,5 +1,32 @@
 from globalTypes import *
 
+LETRA = 0
+DIGITO = 1
+SIMBOL = 2
+DELIM = 3
+OTRO = 4
+# Posibles entradas
+
+""" 
+    ESTADOS DE DFA
+        q0 = START
+        q1 = INID
+        q2 = INNUM
+        q3 = DEAD
+        q4 = DONE
+"""
+
+tabla = [ 
+#     Tabla basada en mi DFA
+#   Letra  Digito Simbol Delim      OTRO
+    [1,     2,      4,      0,      3], #qo
+    [1,     3,      4,      4,      3], #q1
+    [3,     2,      4,      4,      3], #q2
+    [3,     3,      3,      3,      3], #q3 (dead)
+    [4,     4,      4,      4,      4] #q4 (done) 
+]
+
+
 def globales(prog, pos, long):
     global programa, posicion, progLong
 
@@ -7,13 +34,47 @@ def globales(prog, pos, long):
     posicion = pos 
     progLong = long
 
-def reservedLookup(s):
-    for word in ReservedWords:
-        if word.value == s:
-            return TokenType[word.name]
-        
+
+def reservedLookup(tokenString):
+    for w in ReservedWords:
+        if tokenString == w.value:
+            return TokenType[w.name]
     return TokenType.ID
 
+def tipo_char(c):
+    if c.isalpha():
+        return LETRA
+    elif c.isdigit():
+        return DIGITO
+    elif c in "+-*/<>=;(),[]{}":
+        return SIMBOL
+    elif c in " \t\n":
+        return DELIM
+    else:
+        return OTRO
+
+def getSymbolToken(c):
+    mapa = {
+        '+': TokenType.PLUS,
+        '-': TokenType.MINUS,
+        '*': TokenType.TIMES,
+        '/': TokenType.OVER,
+        '<': TokenType.LT,
+        '>': TokenType.RT,
+        '=': TokenType.ASSIGN,
+        ';': TokenType.SEMI,
+        ',': TokenType.COMMA,
+        '(': TokenType.LPAREN,
+        ')': TokenType.RPAREN,
+        '[': TokenType.LBRACKET,
+        ']': TokenType.RBRACKET,
+        '{': TokenType.LBRACE,
+        '}': TokenType.RBRACE,
+    }
+
+    return mapa.get(c, TokenType.ERROR)
+
+# Detector de la posición del error
 def line_colum_error(programa,pos):
     line_num = 1
     initial_line = 0
@@ -33,6 +94,7 @@ def line_colum_error(programa,pos):
 
     return line_num,tex_line, colum
 
+# Print the error
 def printError(tipeError, pos):
     global programa
     line_num, tex_line, colum = line_colum_error(programa,pos)
@@ -41,143 +103,150 @@ def printError(tipeError, pos):
     print(tex_line)
     print(' ' * colum + '^')
 
-def getToken(imprime = True):
-    global programa, posicion, progLong
-    estado = StateType.START
-    tokenString = ""
-    currentState = None
-    token = None
-    tabla = [
-        # Letra             Digito          Simbolo              Blanco       EOF             OTRO
-        [StateType.INID, StateType.INNUM, StateType.DONE, StateType.START,  StateType.DONE, StateType.DONE], #START
-        [StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE], # INASSIGN
-        [StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE], # INCOMMENT
-        [StateType.DONE, StateType.INNUM, StateType.DONE, StateType.DONE,StateType.DONE, StateType.DONE], # INNUM
-        [StateType.INID, StateType.INID, StateType.DONE, StateType.DONE, StateType.DONE,StateType.DONE],  # INID
-        [StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE, StateType.DONE], # DONE
-    ]
 
-    while True : 
+def getToken(imprime = True):
+    global programa, posicion, progLong 
+
+    while posicion < len(programa):
         c = programa[posicion]
 
-        if c.isalpha(): # Letter
-            col = 0
-        elif c.isdigit(): # Digit
-            col = 1
-        elif c in ":+-();%,.'~&!<>*": # Symbol
-            col = 2
-        elif c in ' \t\n': # Space
-            col = 3
-        elif c == '$': # EOF
-            col = 4
-        else:
-            col = 5 # Other
-
-        currentState = tabla[estado.value][col]
-
-        if estado == StateType.INID and currentState == StateType.DONE:
-            token = reservedLookup(tokenString)
+        if c == '$':
+            token = TokenType.ENDFILE
+            tokenString= '$'
 
             if imprime:
                 print(token, '=', tokenString)
-            
+            return token,tokenString
+        
+        elif c in ' \t\n':
+            posicion += 1
+            continue
+
+        elif programa[posicion:posicion+2] == '==':
+            token = TokenType.EQ
+            tokenString = '=='
+            posicion += 2
+
+            if imprime:
+                print(token, '=', tokenString)
             return token, tokenString
         
-        elif estado == StateType.INNUM and currentState == StateType.DONE:
-            if c.isalpha():
-                initial_error = posicion - len(tokenString)
+        elif programa[posicion:posicion+2] == '!=':
+            token = TokenType.NEQ
+            tokenString = '!='
+            posicion += 2
 
-                while posicion < len(programa) and (programa[posicion].isalpha() or programa[posicion].isdigit()):
-                    tokenString += programa[posicion]
+            if imprime:
+                print(token, '=', tokenString)
+            return token, tokenString
+        
+        elif programa[posicion:posicion+2] == '<=':
+            token = TokenType.LTEQ
+            tokenString = '<='
+            posicion += 2
+
+            if imprime:
+                print(token, '=', tokenString)
+            return token, tokenString
+        
+        elif programa[posicion:posicion+2] == '>=':
+            token = TokenType.RTEQ
+            tokenString = '>='
+            posicion += 2
+
+            if imprime:
+                print(token, '=', tokenString)
+            return token, tokenString
+        
+        elif programa[posicion:posicion+2] == '/*':
+            ini_comment = posicion
+            posicion += 2
+
+            while posicion < len(programa) -1 and programa[posicion:posicion+2] != '*/':
+                posicion +=1
+            
+            if posicion >= len(programa) -1:
+                token = TokenType.ERROR
+                tokenString = '/*'
+                
+                if imprime:
+                    print(token, '=', tokenString)
+                    printError("Comentario sin cerrar", ini_comment)
+
+                return token, tokenString
+            
+            posicion += 2
+            continue
+
+
+        estado = 0
+        tokenString = "" # String for storing token
+        start = posicion
+
+        while posicion < len(programa):
+            c = programa[posicion]
+
+            if c ==  '$':
+                col = DELIM
+            else: 
+                col = tipo_char(c)
+
+            nuevoEstado = tabla[estado][col]
+
+            if nuevoEstado == 0:
+                posicion += 1
+                break
+
+            elif nuevoEstado == 1 or nuevoEstado == 2:
+                tokenString += c
+                estado = nuevoEstado
+                posicion += 1
+                continue
+
+            elif nuevoEstado == 4:
+                if estado == 0:
+                    token = getSymbolToken(c)
+                    tokenString = c
+                    posicion += 1
+                elif estado == 1:
+                    token = reservedLookup(tokenString)
+                elif estado == 2:
+                    token = TokenType.NUM
+                else:
+                    token = TokenType.ERROR
+                
+                if imprime:
+                    print(token, '=', tokenString)
+                
+                return token, tokenString
+
+            elif nuevoEstado == 3:
+                if estado == 0:
+                    tokenString = c
                     posicion += 1
                 
+                else:
+                    while posicion < len(programa) and (programa[posicion].isalpha() or programa[posicion].isdigit()):
+                        tokenString += programa[posicion]
+                        posicion += 1
+
                 token = TokenType.ERROR
 
                 if imprime:
                     print(token, '=', tokenString)
-                    printError("la formación de un entero", initial_error)
+                    if tokenString and tokenString[0].isdigit():
+                        printError("la formación de un entero", start)
+                    else:
+                        printError("en la formación del token", start)
                 
                 return token,tokenString
             
-            token = TokenType.NUM
-
-            if imprime:
-                print(token, '=', tokenString)
-
-            return token, tokenString
-        
-        elif estado == StateType.START and currentState == StateType.DONE:
-            tokenString = c
-
-            if c == ':' and posicion + 1 < len(programa) and programa[posicion + 1] == '=':
-                tokenString = ':='
-                token = TokenType.ASSIGN
-                posicion += 2
-
             else:
-                tokenString = c
+                token = TokenType.ERROR
+
+                if imprime:
+                    print(token, '=', tokenString)
                 
-                if c == '+':
-                    token = TokenType.PLUS
-                elif c == '-':
-                    token = TokenType.MINUS
-                elif c == '(':
-                    token = TokenType.LPAREN
-                elif c == ')':
-                    token = TokenType.RPAREN
-                elif c == ';':
-                    token = TokenType.SEMI
-                elif c == ',':
-                    token = TokenType.COMMA
-                elif c == '%':
-                    token = TokenType.PERCENT
-                elif c == '.':
-                    token = TokenType.DOT
-                elif c == "'":
-                    token = TokenType.QUOTE
-                elif c == '~':
-                    token = TokenType.TILDE
-                elif c == '&':
-                    token = TokenType.AMPERSAND
-                elif c == '!':
-                    token = TokenType.EXCLAMATION
-                elif c == '<':
-                    token = TokenType.LT
-                elif c == '>':
-                    token = TokenType.RT
-                elif c == '*':
-                    token = TokenType.TIMES
-                elif c == '$':
-                    token = TokenType.ENDFILE
-                else:
-                    token = TokenType.ERROR
-
-                posicion += 1
-
-            if imprime:
-                print(token, '=', tokenString)
-                
-                if token == TokenType.ERROR:
-                    printError("en la formación del token", posicion -1)
-            return token, tokenString
+                return token, tokenString
         
-        elif currentState == StateType.DONE and col == 5:
-            token = TokenType.ERROR
-            tokenString = c
-
-            if imprime:
-                print(token, '=', tokenString)
-                printError('en la formación del token', posicion)
-
-            posicion += 1
-            return token, tokenString
-        
-        elif estado == StateType.START and currentState == StateType.START:
-            posicion += 1
-
-        else: 
-            tokenString += c 
-            posicion += 1
-            estado = currentState
-    
-    return TokenType.ERROR, tokenString
+    return TokenType.ENDFILE, '$'
