@@ -295,7 +295,6 @@ def getToken(imprime = True):
                 
                 if imprime:
                     print(token, '=', tokenString)
-                
                 return token, tokenString
 
             # Estado de error léxicco
