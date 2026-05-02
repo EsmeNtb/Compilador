@@ -36,6 +36,7 @@ from globalTypes import TreeNode
 
 global token, tokenString
 
+
 def match(expected):
     global token, tokenString, nextline
     
@@ -56,9 +57,9 @@ def program():
 def declaration_list():
         t = declaration()
         p = t  # puntero auxiliar
+
         while token != TokenType.ENDFILE:
             q = declaration() # nuevo nodo leído
-
             if q is not None: # Si creó un nodo válido
                 if t is None:
                      t = p = q # Si no existe un nodo inicial, crea el primer nodo de la lista
@@ -85,90 +86,328 @@ def declaration():
     var = tokenString
     match(TokenType.ID)
 
-    # var_declaration
-    if token == TokenType.SEMI:
-        t = newDeclNode(DeclKind.Vark)
+    if token == TokenType.SEMI or token == TokenType.LBRACKET:
+        return var_declaration(type_v, var)
 
+    elif token == TokenType.LPAREN:
+        return fun_declaration(type_v, var)
+    
+    else:
+        SyntaxError("expected ';' or '[' or '(' after a declaration")
+        return None
+    
+def var_declaration(type_v,var):
+    
+    if token == TokenType.SEMI:
+        t = newDeclNode(DeclKind.VarK)
         t.type = type_v
         t.name = var
+
         match(TokenType.SEMI)
         return t
     
     elif token == TokenType.LBRACKET:
-        t = newDeclNode(DeclKind.Vark)
+        t = newDeclNode(DeclKind.VarK)
         t.type = type_v
         t.name = var
+
         match(TokenType.LBRACKET)
         match(TokenType.NUM)
         match(TokenType.RBRACKET)
         match(TokenType.SEMI)
-    
-    # fun-declaration
-    elif token == TokenType.LBRACE:
-        t = newDeclNode(DeclKind.Funk)
-
-        t.type = type_v
-        t.name = var
-        match(TokenType.LPAREN)
-        t.child[0] = params()
-        match(TokenType.RPAREN)
-        t.child[1] = compound_stmt()
         return t
-    
     else:
-        SyntaxError("expected ';' or '[' or '(' after a declaration")
-    #match(TokenType.ID)
+        SyntaxError("expected ';' or '[' after a declaration")
+        return None
 
-def params():
-    if t ==(): # hmmmmmm
+def fun_declaration(type_v, var):
+    t = newDeclNode(DeclKind.FunK)
+    t.type = type_v
+    t.name = var
+
+    match(TokenType.LPAREN)
+    t.child[0] = params()
+    match(TokenType.RPAREN)
+    t.child[1] = compound_stmt()
+    return t
     
-    elif token == TokenType.VOID:
+    
+def params():
+    if token == TokenType.VOID:
         match(TokenType.VOID)
-        return TokenType.VOID
+        return None
+    else:
+        return param_list()
 
 def param_list():
         t = param()
         p = t  # puntero auxiliar
-        while token != TokenType.ENDFILE:
-            q = param() # nuevo nodo leído
+
+        while token == TokenType.COMMA:
+            match(TokenType.COMMA)
+            q = param() 
 
             if q is not None: # Si creó un nodo válido
-                if t is None:
-                    t = p = q # Si no existe un nodo inicial, crea el primer nodo de la lista
-                else: 
-                    p.sibling = q  
-                    p = q  
+                p.sibling = q  
+                p = q  
+
         return t  
 
 def param():
     type_v = type_specifier()
     var = tokenString
-    t = newDeclNode(DeclKind.VarK)
     match(TokenType.ID)
 
+    t = newDeclNode(DeclKind.ParamK)
+    t.type = type_v
+    t.name = var    
+
     if token == TokenType.LBRACKET:
-        t.type = type_v
-        t.name = var
+
         match(TokenType.LBRACKET)
         # match() 
         match(TokenType.RBRACKET)
-    
-    else:
-        SyntaxError("expected '(' after a declaration")
-
     return t
 
 
 def compound_stmt():
-    match(TokenType.LBRACKET)
-    t.child[0] = local_declaration()
+    t = newStmtNode(StmtKind.CompoundK)
+    match(TokenType.LBRACE)
+    t.child[0] = local_declarations()
     t.child[1] = statement_list()
-    match(TokenType.RBRACKET) 
+    match(TokenType.RBRACE) 
     return t
 
-def local_declaration():
+def local_declarations():
+    t = None
+    p = None
+
+    while token == TokenType.INT or token == TokenType.VOID:
+        type_v = type_specifier()
+        var = tokenString
+        q = var_declaration(type_v,var)
+
+        if q is not None:
+            if t is None:
+                t = p = q
+            else:
+                p.sibling = q
+                p = q
+
+    return t
 
 def statement_list():
+    t = None
+    p = None
+
+    while token == TokenType.INT or token == TokenType.VOID:
+        type_v = type_specifier()
+        var = tokenString
+        q = statament(type_v,var)
+
+        if q is not None:
+            if t is None:
+                t = p = q
+            else:
+                p.sibling = q
+                p = q
+
+    return t
+
+def statament():
+    if token == TokenType.ID:
+        t = expression_stmt()
+    elif token == TokenType.LBRACE:
+        t = compound_stmt()
+    elif token == TokenType.IF:
+        t = selection_stmt()
+    elif token == TokenType.WHILE:
+        t = iteration_stmt()
+    elif token == TokenType.RETURN:
+        t = return_stmt()
+
+
+def expression_stmt():
+    if ():
+        match(TokenType.SEMI)
+    elif token == TokenType.SEMI:
+        match(TokenType.SEMI)
+    else:
+        SyntaxError("")
+
+def selection_stmt():
+    match(TokenType.IF)
+    match(TokenType.LPAREN)
+    t.child[0] = expression()
+    match(TokenType.RPAREN)
+    t.child[1] = statament()
+
+    if token == TokenType.ELSE:
+        match(TokenType.ELSE)
+        t = statament()
+    else:
+        SyntaxError("expected else after a declaration")
+        
+
+def iteration_stmt():
+    match(TokenType.WHILE)
+    match(TokenType.LPAREN)
+    t.child[0] = expression()
+    match(TokenType.RPAREN)
+    t.child[1] = statament()
+    return t
+
+def return_stmt():
+    match(TokenType.RETURN)
+    if token == TokenType.SEMI:
+        match(TokenType.SEMI)
+    elif token == TokenType.ID:
+        t = expression()
+        match(TokenType.SEMI)
+    else:
+        SyntaxError("")
+
+def expression():
+    signs = (TokenType.LTEQ or TokenType.LT or TokenType.RT
+             or TokenType.RTEQ or TokenType.EQ or TokenType.NEQ)
+    
+    if token == TokenType.ID:
+        t.child[0] = var()
+        match(TokenType.ASSIGN)
+        t.child[1] = expression()
+    elif token == signs or token == TokenType.PLUS or token == TokenType.MINUS:
+        t = simple_expression()
+    else:
+        SyntaxError("")
+
+def var():
+    type_v = type_specifier()
+    vari = tokenString
+    match(TokenType.ID)
+    t = newDeclNode(DeclKind.VarK)
+    t.type = type_v
+    t.name = vari
+    
+    if token == TokenType.LBRACKET:
+        match(TokenType.LBRACKET)
+        t = expression()
+        match(TokenType.RBRACKET)
+        return t
+    
+    else:
+        SyntaxError()
+
+def simple_expression():
+    signs = (TokenType.LTEQ or TokenType.LT or TokenType.RT
+             or TokenType.RTEQ or TokenType.EQ or TokenType.NEQ)
+    if token == signs:
+        t = additive_expression()
+    elif token ==TokenType.PLUS or token == TokenType.MINUS:
+        t = additive_expression()
+    else:
+        SyntaxError("")
+
+def relop():
+    if token ==  TokenType.LTEQ:
+        match(TokenType.LTEQ)
+    elif token == TokenType.LT:
+        match(TokenType.LT)
+    elif token == TokenType.RL:
+        match(TokenType.RL)
+    elif token == TokenType.RTEQ:
+        match(TokenType.RTEQ)
+    elif token == TokenType.EQ:
+        match(TokenType.EQ)
+    elif token == TokenType.NEQ:
+        match(TokenType.NEQ)
+    else:
+        SyntaxError("expected '<=' | '<' | '>' | '>=' | '==' | '!=' after a declaration")
+
+def additive_expression():
+    if token == TokenType.PLUS or token == TokenType.MINUS:
+        t.child[0] = addop()
+        t.child[1] = term()
+    elif token == TokenType.TIMES or token == TokenType.OVER:
+        t = term()
+    else:
+        SyntaxError("expected '+' | '-' | '*' | '/' after a declaration")
+
+
+def addop():
+    if token == TokenType.PLUS:
+        match(TokenType.PLUS)
+    elif token == TokenType.MINUS:
+        match(TokenType.MINUS)
+    else:
+        SyntaxError("expected '+' or '-' after a declaration")
+
+def term():
+    if token == TokenType.TIMES or token == TokenType.OVER:
+        t = factor()
+    elif token == TokenType.LBRACE:
+        t = factor()
+    else:
+        SyntaxError("expected '*' | '/'  | '(' after a declaration")
+
+def mulop():
+    if token == TokenType.TIMES:
+        match(TokenType.TIMES)
+    elif token == TokenType.OVER:
+        match(TokenType.OVER)
+    else:
+        SyntaxError("expected '*' or '/' after a declaration")
+    
+def factor():
+    if token == TokenType.LPAREN:
+        match(TokenType.LPAREN)
+        t = expression()
+        match(TokenType.RPAREN)
+    elif token == TokenType.ID:
+        t = var()
+    elif token == TokenType.ID and token == TokenType.LPAREN:
+        t = call()
+    elif token == TokenType.NUM:
+        match(TokenType.NUM)
+    return t 
+
+def call():
+    if token == TokenType.ID:
+        match(TokenType.ID)
+        match(TokenType.LPAREN)
+        t = args()
+        match(TokenType.RPAREN)
+    else:
+        SyntaxError("expected ID after declaration")
+
+def args():
+    t = None
+    p = None
+
+    while token == TokenType.COMMA:
+        q = arg_list()
+
+        if q is not None:
+            if t is None:
+                t = p = q
+            else:
+                p.sibling = q
+                p = q
+
+    return t
+
+def arg_list():
+        t = expression()
+        p = t  # puntero auxiliar
+
+        while token == TokenType.COMMA:
+            match(TokenType.COMMA)
+            q = expression() 
+
+            if q is not None: # Si creó un nodo válido
+                p.sibling = q  
+                p = q  
+
+        return t  
 
 # Function newStmtNode creates a new statement
 # node for syntax tree construction
