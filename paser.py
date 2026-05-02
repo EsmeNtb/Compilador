@@ -56,6 +56,7 @@ def declaration_list():
         t = declaration()
         p = t  # puntero auxiliar
 
+        # Use of AI to understand the first sintaxis
         while token != TokenType.ENDFILE:
             q = declaration() # nuevo nodo leído
             if q is not None: # Si creó un nodo válido
@@ -83,6 +84,8 @@ def declaration():
     type_v = type_specifier()
     vari= tokenString
     match(TokenType.ID)
+
+    # Use of AI for understanding the syntaxis of rule 3
 
     if token == TokenType.SEMI or token == TokenType.LBRACKET:
         return var_declaration(type_v, vari)
@@ -114,6 +117,7 @@ def var_declaration(type_v,vari):
         match(TokenType.RBRACKET)
         match(TokenType.SEMI)
         return t
+    
     else:
         syntaxisError("expected ';' or '[' after a declaration")
         return None
@@ -128,7 +132,6 @@ def fun_declaration(type_v, vari):
     match(TokenType.RPAREN)
     t.child[1] = compound_stmt()
     return t
-    
     
 def params():
     if token == TokenType.VOID:
@@ -165,7 +168,6 @@ def param():
         match(TokenType.RBRACKET)
     return t
 
-
 def compound_stmt():
     t = newStmtNode(StmtKind.CompoundK)
     match(TokenType.LBRACE)
@@ -175,6 +177,7 @@ def compound_stmt():
     return t
 
 def local_declarations():
+    # Use of AI to understan what to do when we have empty
     t = None
     p = None
 
@@ -182,7 +185,7 @@ def local_declarations():
         type_v = type_specifier()
         vari = tokenString
         match(TokenType.ID)
-        q = var_declaration(type_v,var)
+        q = var_declaration(type_v,vari)
 
         if q is not None:
             if t is None:
@@ -251,8 +254,7 @@ def selection_stmt():
 
     if token == TokenType.ELSE:
         match(TokenType.ELSE)
-        t.child[2] = statement()
-    
+        t.child[2] = statement() 
     return t
         
 
@@ -280,6 +282,7 @@ def return_stmt():
 def expression():
     if token == TokenType.ID:
         t = var()
+
         if token == TokenType.ASSIGN:
             p = newExpNode(ExpKind.AssignK)
             p.child[0] = t
@@ -312,11 +315,11 @@ def simple_expression():
     }
 
     t = additive_expression()
-    # Chat
+ 
     if token in relop_var:
         p = newExpNode(ExpKind.OpK)
         p. child[0] = t
-        p.op = token
+        p.op = token     # Use of AI to understand that the operator must be save before it consume it by the function
         relop()
         p.child[1] = additive_expression
         t = p
@@ -325,16 +328,22 @@ def simple_expression():
 def relop():
     if token ==  TokenType.LTEQ:
         match(TokenType.LTEQ)
+
     elif token == TokenType.LT:
         match(TokenType.LT)
+
     elif token == TokenType.RT:
         match(TokenType.RT)
+
     elif token == TokenType.RTEQ:
         match(TokenType.RTEQ)
+
     elif token == TokenType.EQ:
         match(TokenType.EQ)
+
     elif token == TokenType.NEQ:
         match(TokenType.NEQ)
+
     else:
         syntaxisError("expected '<=' | '<' | '>' | '>=' | '==' | '!=' after a declaration")
 
@@ -354,8 +363,10 @@ def additive_expression():
 def addop():
     if token == TokenType.PLUS:
         match(TokenType.PLUS)
+
     elif token == TokenType.MINUS:
         match(TokenType.MINUS)
+
     else:
         syntaxisError("expected '+' or '-' after a declaration")
 
@@ -374,8 +385,10 @@ def term():
 def mulop():
     if token == TokenType.TIMES:
         match(TokenType.TIMES)
+
     elif token == TokenType.OVER:
         match(TokenType.OVER)
+
     else:
         syntaxisError("expected '*' or '/' after a declaration")
     
@@ -388,6 +401,7 @@ def factor():
     
     elif token == TokenType.NUM:
         t = newExpNode(ExpKind.ConstK)
+
         t.val = int(tokenString)
         match(TokenType.NUM)
         return t
@@ -398,6 +412,7 @@ def factor():
 
         if token== TokenType.LPAREN:
             t = newExpNode(ExpKind.CallK)
+
             t.name = vari
             match(TokenType.LPAREN)
             t.child[0] = args()
@@ -422,6 +437,7 @@ def call():
         vari = tokenString
         t = newExpNode(ExpKind.CallK)
         t.name = vari
+
         match(TokenType.ID)
         match(TokenType.LPAREN)
         t.child[0] = args()
