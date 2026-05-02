@@ -1,4 +1,7 @@
 """
+    Gramática BNF usada por el parser para C-
+    Implementación de un análisis descendente recursivo
+
     1. program -> declaration-list
     2. declaration-list -> declaration-list declaration | declaration
     3. declaration -> var-declaration | fun-declaration
@@ -43,6 +46,7 @@ Error = False
 imprimeScanner = False
 indentno = 0
 
+# Inializa las variables globales compartidas con el lexer
 def globales(prog, pos, long):
     global programa, posicion, progLong
 
@@ -51,6 +55,8 @@ def globales(prog, pos, long):
     progLong = long
 
     lexer_globales(prog, pos, long)
+
+# Verifica que el token actual coincida con el token esperado
 def match(expected):
     global token, tokenString, tokenPos
 
@@ -494,8 +500,6 @@ def newDeclNode(kind):
     #t.nextline = nextline
     return t
 
-
-
 # Function newExpNode creates a new statement
 # node for syntax tree construction
 def newStmtNode(kind):
@@ -522,6 +526,7 @@ def newExpNode(kind):
     #t.type = ExpType.Void
     return t
 
+# Función para reportar un error sintáctica mostrando la línea
 def syntaxisError(message):
     global Error
 
@@ -533,6 +538,7 @@ def syntaxisError(message):
 
     Error = True
 
+# Implementación de recuperacción de errores
 def panicMode():
     global token, tokenString, tokenPos
 
