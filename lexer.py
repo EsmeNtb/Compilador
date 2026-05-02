@@ -176,22 +176,23 @@ def getToken(imprime = True):
         imprime : si es True, imprime el token encontrado
 
     Retorna:
-        (token, tokenString)
+        (token, tokenString, start)
     """
 
-    global programa, posicion, progLong 
+    global programa, posicion, progLong
 
     while posicion < len(programa):
         c = programa[posicion]
 
         # Fin del archivo
         if c == '$':
+            start = posicion
             token = TokenType.ENDFILE
             tokenString= '$'
 
             if imprime:
                 print(token, '=', tokenString)
-            return token,tokenString
+            return token,tokenString,start
         
         # Ignora los delimitadores
         elif c in ' \t\n':
@@ -200,43 +201,49 @@ def getToken(imprime = True):
         
          # 3. OPERADORES DE DOS CARACTERES
         elif programa[posicion:posicion+2] == '==':
+            start = posicion
             token = TokenType.EQ
             tokenString = '=='
             posicion += 2
 
             if imprime:
                 print(token, '=', tokenString)
-            return token, tokenString
+            return token, tokenString ,start
         
         elif programa[posicion:posicion+2] == '!=':
+            start = posicion
             token = TokenType.NEQ
             tokenString = '!='
+            
             posicion += 2
 
             if imprime:
                 print(token, '=', tokenString)
-            return token, tokenString
+            return token, tokenString , start
         
         elif programa[posicion:posicion+2] == '<=':
+            start = posicion
             token = TokenType.LTEQ
             tokenString = '<='
             posicion += 2
 
             if imprime:
                 print(token, '=', tokenString)
-            return token, tokenString
+            return token, tokenString, start
         
         elif programa[posicion:posicion+2] == '>=':
+            start = posicion
             token = TokenType.RTEQ
             tokenString = '>='
             posicion += 2
 
             if imprime:
                 print(token, '=', tokenString)
-            return token, tokenString
+            return token, tokenString, start
         
         # 4. MANEJO DE COMENTARIOS BLOQUE: /* ... */
         elif programa[posicion:posicion+2] == '/*':
+            start = posicion
             ini_comment = posicion
             posicion += 2
 
@@ -251,7 +258,7 @@ def getToken(imprime = True):
                     print(token, '=', tokenString)
                     printError("Comentario sin cerrar", ini_comment)
 
-                return token, tokenString
+                return token, tokenString, start
             
             posicion += 2
             continue
@@ -295,7 +302,7 @@ def getToken(imprime = True):
                 
                 if imprime:
                     print(token, '=', tokenString)
-                return token, tokenString
+                return token, tokenString, start
 
             # Estado de error léxicco
             elif nuevoEstado == 3:
@@ -317,7 +324,7 @@ def getToken(imprime = True):
                     else:
                         printError("en la formación del token", start)
                 
-                return token,tokenString
+                return token,tokenString, start
             # Cualquier otro caso inesperado
             else:
                 token = TokenType.ERROR
@@ -325,6 +332,6 @@ def getToken(imprime = True):
                 if imprime:
                     print(token, '=', tokenString)
                 
-                return token, tokenString
+                return token, tokenString, start
         
-    return TokenType.ENDFILE, '$'
+    return TokenType.ENDFILE, '$', posicion
