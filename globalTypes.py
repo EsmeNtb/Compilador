@@ -82,4 +82,21 @@ class ExpKind(Enum):
     ConstK = 3
     CallK = 4
 
-#class TreeNode:
+MAXCHILDREN = 3
+
+class TreeNode:
+    def __init__(self):
+        self.child = [None] * MAXCHILDREN
+        self.sibling = None
+
+        self.nodekind = None
+        self.decl = None
+        self.stmt = None
+        self.exp = None
+
+        self.name = None
+        self.type = None
+        self.val = None
+        self.op = None
+        self.size = None
+        self.nextline = None
