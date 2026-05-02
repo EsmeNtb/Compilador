@@ -58,3 +58,28 @@ class ReservedWords(Enum):
     RETURN = 'return'
     VOID = 'void'
     WHILE = 'while'
+
+class NodeKind(Enum):
+    DeclK = 0
+    StmtK = 1
+    ExpK = 2
+
+class DeclKind(Enum):
+    VarK = 0
+    FunK = 1
+    ParamK = 2
+
+class StmtKind(Enum):
+    CompoundK = 0
+    IfK = 1
+    WhileK = 2
+    ReturnK = 3
+
+class ExpKind(Enum):
+    AssignK = 0
+    IdK = 1
+    OpK = 2
+    ConstK = 3
+    CallK = 4
+
+#class TreeNode:
