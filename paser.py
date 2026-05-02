@@ -32,21 +32,19 @@
 """
 
 from globalTypes import *
+from lexer import *
 from globalTypes import TreeNode
 
 global token, tokenString
 
 
 def match(expected):
-    global token, tokenString, nextline
+    global token, tokenString
     
     if (token == expected):
-        #token, tokenString, nextline = getToken(imprimeScanner)
-        return 
+        token, tokenString = getToken()
     else:
-        SyntaxError("unexpected token -> ")
-        print(token,tokenString)
-        #print("      ")
+        syntaxisError(f"expected {expected}, got {token}")
 
 def program():
     t =  declaration_list()
@@ -78,30 +76,30 @@ def type_specifier():
         return TokenType.VOID
     
     else:
-        SyntaxError("expected type specifier -> ")
+        syntaxisError("expected type specifier -> ")
         print(token, tokenString)
 
 def declaration():
     type_v = type_specifier()
-    var = tokenString
+    vari= tokenString
     match(TokenType.ID)
 
     if token == TokenType.SEMI or token == TokenType.LBRACKET:
-        return var_declaration(type_v, var)
+        return var_declaration(type_v, vari)
 
     elif token == TokenType.LPAREN:
-        return fun_declaration(type_v, var)
+        return fun_declaration(type_v, vari)
     
     else:
-        SyntaxError("expected ';' or '[' or '(' after a declaration")
+        syntaxisError("expected type specifier -> ")
         return None
     
-def var_declaration(type_v,var):
+def var_declaration(type_v,vari):
     
     if token == TokenType.SEMI:
         t = newDeclNode(DeclKind.VarK)
         t.type = type_v
-        t.name = var
+        t.name = vari
 
         match(TokenType.SEMI)
         return t
@@ -117,13 +115,13 @@ def var_declaration(type_v,var):
         match(TokenType.SEMI)
         return t
     else:
-        SyntaxError("expected ';' or '[' after a declaration")
+        syntaxisError("expected ';' or '[' after a declaration")
         return None
 
-def fun_declaration(type_v, var):
+def fun_declaration(type_v, vari):
     t = newDeclNode(DeclKind.FunK)
     t.type = type_v
-    t.name = var
+    t.name = vari
 
     match(TokenType.LPAREN)
     t.child[0] = params()
@@ -150,20 +148,18 @@ def param_list():
             if q is not None: # Si creó un nodo válido
                 p.sibling = q  
                 p = q  
-
         return t  
 
 def param():
     type_v = type_specifier()
-    var = tokenString
+    vari = tokenString
     match(TokenType.ID)
 
     t = newDeclNode(DeclKind.ParamK)
     t.type = type_v
-    t.name = var    
+    t.name = vari
 
     if token == TokenType.LBRACKET:
-
         match(TokenType.LBRACKET)
         # match() 
         match(TokenType.RBRACKET)
@@ -184,7 +180,8 @@ def local_declarations():
 
     while token == TokenType.INT or token == TokenType.VOID:
         type_v = type_specifier()
-        var = tokenString
+        vari = tokenString
+        match(TokenType.ID)
         q = var_declaration(type_v,var)
 
         if q is not None:
@@ -193,17 +190,21 @@ def local_declarations():
             else:
                 p.sibling = q
                 p = q
-
     return t
 
 def statement_list():
     t = None
     p = None
 
-    while token == TokenType.INT or token == TokenType.VOID:
-        type_v = type_specifier()
-        var = tokenString
-        q = statament(type_v,var)
+    while token in {
+        TokenType.ID,
+        TokenType.LBRACE,
+        TokenType.IF,
+        TokenType.WHILE,
+        TokenType.RETURN,
+        TokenType.SEMI
+    }:
+        q = statement()
 
         if q is not None:
             if t is None:
@@ -211,109 +212,123 @@ def statement_list():
             else:
                 p.sibling = q
                 p = q
-
     return t
 
-def statament():
-    if token == TokenType.ID:
-        t = expression_stmt()
+def statement():
+    if token == TokenType.ID or token == TokenType.SEMI:
+        return expression_stmt()
     elif token == TokenType.LBRACE:
-        t = compound_stmt()
+        return compound_stmt()
     elif token == TokenType.IF:
-        t = selection_stmt()
+        return selection_stmt()
     elif token == TokenType.WHILE:
-        t = iteration_stmt()
+        return iteration_stmt()
     elif token == TokenType.RETURN:
-        t = return_stmt()
+        return return_stmt()
+    else:
+        syntaxisError("expected statement")
+        return None
 
 
 def expression_stmt():
-    if ():
+    if token == TokenType.SEMI:
         match(TokenType.SEMI)
-    elif token == TokenType.SEMI:
-        match(TokenType.SEMI)
+        return None
+    
     else:
-        SyntaxError("")
+        t = expression()
+        match(TokenType.SEMI)
+        return t
 
 def selection_stmt():
+    t = newStmtNode(StmtKind.IfK)
+
     match(TokenType.IF)
     match(TokenType.LPAREN)
     t.child[0] = expression()
     match(TokenType.RPAREN)
-    t.child[1] = statament()
+    t.child[1] = statement()
 
     if token == TokenType.ELSE:
         match(TokenType.ELSE)
-        t = statament()
-    else:
-        SyntaxError("expected else after a declaration")
+        t.child[2] = statement()
+    
+    return t
         
 
 def iteration_stmt():
+    t = newStmtNode(StmtKind.WhileK)
+
     match(TokenType.WHILE)
     match(TokenType.LPAREN)
     t.child[0] = expression()
     match(TokenType.RPAREN)
-    t.child[1] = statament()
+    t.child[1] = statement()
     return t
 
 def return_stmt():
+    t = newStmtNode(StmtKind.ReturnK)
+
     match(TokenType.RETURN)
     if token == TokenType.SEMI:
         match(TokenType.SEMI)
-    elif token == TokenType.ID:
-        t = expression()
+    else: 
+        t.child[0] = expression()
         match(TokenType.SEMI)
-    else:
-        SyntaxError("")
+    return t
 
 def expression():
-    signs = (TokenType.LTEQ or TokenType.LT or TokenType.RT
-             or TokenType.RTEQ or TokenType.EQ or TokenType.NEQ)
-    
     if token == TokenType.ID:
-        t.child[0] = var()
-        match(TokenType.ASSIGN)
-        t.child[1] = expression()
-    elif token == signs or token == TokenType.PLUS or token == TokenType.MINUS:
-        t = simple_expression()
+        t = var()
+        if token == TokenType.ASSIGN:
+            p = newExpNode(ExpKind.AssignK)
+            p.child[0] = t
+            match(TokenType.ASSIGN)
+            p.child[1] = expression()
+            return p
     else:
-        SyntaxError("")
+        return simple_expression()
 
 def var():
-    type_v = type_specifier()
     vari = tokenString
     match(TokenType.ID)
-    t = newDeclNode(DeclKind.VarK)
-    t.type = type_v
+    t = newDeclNode(ExpKind.IdK)
     t.name = vari
     
     if token == TokenType.LBRACKET:
         match(TokenType.LBRACKET)
-        t = expression()
+        t.child[0] = expression()
         match(TokenType.RBRACKET)
-        return t
-    
-    else:
-        SyntaxError()
+    return t
 
 def simple_expression():
-    signs = (TokenType.LTEQ or TokenType.LT or TokenType.RT
-             or TokenType.RTEQ or TokenType.EQ or TokenType.NEQ)
-    if token == signs:
-        t = additive_expression()
-    elif token ==TokenType.PLUS or token == TokenType.MINUS:
-        t = additive_expression()
-    else:
-        SyntaxError("")
+    relop_var = {
+    TokenType.LTEQ,
+    TokenType.LT,
+    TokenType.RT,
+    TokenType.RTEQ,
+    TokenType.EQ,
+    TokenType.NEQ
+    }
+
+    t = additive_expression()
+    # Chat
+    if token in relop_var:
+        p = newExpNode(ExpKind.OpK)
+        p. child[0] = t
+        p.op = token
+        relop()
+        p.child[1] = additive_expression
+        t = p
+    return t 
 
 def relop():
     if token ==  TokenType.LTEQ:
         match(TokenType.LTEQ)
     elif token == TokenType.LT:
         match(TokenType.LT)
-    elif token == TokenType.RL:
-        match(TokenType.RL)
+    elif token == TokenType.RT:
+        match(TokenType.RT)
     elif token == TokenType.RTEQ:
         match(TokenType.RTEQ)
     elif token == TokenType.EQ:
@@ -321,17 +336,20 @@ def relop():
     elif token == TokenType.NEQ:
         match(TokenType.NEQ)
     else:
-        SyntaxError("expected '<=' | '<' | '>' | '>=' | '==' | '!=' after a declaration")
+        syntaxisError("expected '<=' | '<' | '>' | '>=' | '==' | '!=' after a declaration")
 
 def additive_expression():
-    if token == TokenType.PLUS or token == TokenType.MINUS:
-        t.child[0] = addop()
-        t.child[1] = term()
-    elif token == TokenType.TIMES or token == TokenType.OVER:
-        t = term()
-    else:
-        SyntaxError("expected '+' | '-' | '*' | '/' after a declaration")
+    t = term()
 
+    while token == TokenType.PLUS or token == TokenType.MINUS:
+        p = newExpNode(ExpKind.OpK)
+        p.child[1] = term()
+        p.op = token
+
+        addop()
+        p.child[1] = term ()
+        t = p
+    return t
 
 def addop():
     if token == TokenType.PLUS:
@@ -339,15 +357,19 @@ def addop():
     elif token == TokenType.MINUS:
         match(TokenType.MINUS)
     else:
-        SyntaxError("expected '+' or '-' after a declaration")
+        syntaxisError("expected '+' or '-' after a declaration")
 
 def term():
-    if token == TokenType.TIMES or token == TokenType.OVER:
-        t = factor()
-    elif token == TokenType.LBRACE:
-        t = factor()
-    else:
-        SyntaxError("expected '*' | '/'  | '(' after a declaration")
+    t = factor()
+
+    while token == TokenType.TIMES or token == TokenType.OVER:
+        p = newExpNode(ExpKind.OpK)
+        p.child[0] = t 
+        p.op = token
+        mulop()
+        p.child[1] = factor()
+        t = p
+    return t
 
 def mulop():
     if token == TokenType.TIMES:
@@ -355,45 +377,66 @@ def mulop():
     elif token == TokenType.OVER:
         match(TokenType.OVER)
     else:
-        SyntaxError("expected '*' or '/' after a declaration")
+        syntaxisError("expected '*' or '/' after a declaration")
     
 def factor():
     if token == TokenType.LPAREN:
         match(TokenType.LPAREN)
         t = expression()
         match(TokenType.RPAREN)
-    elif token == TokenType.ID:
-        t = var()
-    elif token == TokenType.ID and token == TokenType.LPAREN:
-        t = call()
+        return t
+    
     elif token == TokenType.NUM:
+        t = newExpNode(ExpKind.ConstK)
+        t.val = int(tokenString)
         match(TokenType.NUM)
-    return t 
+        return t
+    
+    elif token == TokenType.ID:
+        vari = tokenString
+        match(TokenType.ID)
+
+        if token== TokenType.LPAREN:
+            t = newExpNode(ExpKind.CallK)
+            t.name = vari
+            match(TokenType.LPAREN)
+            t.child[0] = args()
+            match(TokenType.RPAREN)
+            return t
+        else:
+            t = newExpNode(ExpKind.IdK)
+            t.name = vari
+
+            if token == TokenType.LBRACKET:
+                match(TokenType.LBRACKET)
+                t.child[0] = expression()
+                match(TokenType.RBRACKET)
+
+            return t
+    else:
+        syntaxisError("expected factor")
+        return None
 
 def call():
     if token == TokenType.ID:
+        vari = tokenString
+        t = newExpNode(ExpKind.CallK)
+        t.name = vari
         match(TokenType.ID)
         match(TokenType.LPAREN)
-        t = args()
+        t.child[0] = args()
         match(TokenType.RPAREN)
+
+        return t
     else:
-        SyntaxError("expected ID after declaration")
+        syntaxisError("expected ID after declaration")
+        return None
 
+# Chat
 def args():
-    t = None
-    p = None
-
-    while token == TokenType.COMMA:
-        q = arg_list()
-
-        if q is not None:
-            if t is None:
-                t = p = q
-            else:
-                p.sibling = q
-                p = q
-
-    return t
+    if token == TokenType.RPAREN:
+        return None
+    else: return arg_list()
 
 def arg_list():
         t = expression()
@@ -409,7 +452,7 @@ def arg_list():
 
         return t  
 
-# Function newStmtNode creates a new statement
+# Function newStmtNode creates a declaration
 # node for syntax tree construction
 # node for syntax tree construction     
 def newDeclNode(kind):
@@ -427,7 +470,7 @@ def newDeclNode(kind):
 
 
 
-# Function newExpNode creates a new expression 
+# Function newExpNode creates a new statement
 # node for syntax tree construction
 def newStmtNode(kind):
     t = TreeNode();
@@ -458,13 +501,23 @@ def newExpNode(kind):
 #        t.type = ExpType.Void
     return t
 
+def syntaxisError(message):
+    global Error
+
+    print(f"Sintáctico: {message}")
+    print("Token actual: ", token, tokenString)
+    Error = True
+
+
 def parse(imprime = True):
-    global token, tokenString, nextline
-    #token, tokenString, nextline = getToken(imprimeScanner)
+    global token, tokenString, Error
+    Error =  False
+    token, tokenString = getToken()
+    
     t = program()
     if (token != TokenType.ENDFILE):
         SyntaxError("Code ends before file\n")
 #    if imprime:
  #       printTree(t)
-    return t, #Error
+    return t, Error
 
