@@ -294,18 +294,16 @@ def return_stmt():
     return t
 
 def expression():
-    if token == TokenType.ID:
-        t = var()
+    t = simple_expression()
 
-        if token == TokenType.ASSIGN:
-            p = newExpNode(ExpKind.AssignK)
-            p.child[0] = t
-            match(TokenType.ASSIGN)
-            p.child[1] = expression()
-            return p
-        return t 
-    else:
-        return simple_expression()
+    if token == TokenType.ASSIGN:
+        p = newExpNode(ExpKind.AssignK)
+        p.child[0] = t
+        match(TokenType.ASSIGN)
+        p.child[1] = expression()
+        return p
+
+    return t
 
 def var():
     vari = tokenString
@@ -549,7 +547,8 @@ def panicMode():
     while token not in sync_tokens:
         token, tokenString, tokenPos = getToken(imprimeScanner)
 
-    if token == TokenType.SEMI:
+    # Consume synchronization tokens that close the bad construct
+    if token == TokenType.SEMI or token == TokenType.RBRACE:
         token, tokenString, tokenPos = getToken(imprimeScanner)
 
 # printSpaces indents by printing spaces */
