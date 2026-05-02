@@ -32,19 +32,33 @@
 """
 
 from globalTypes import *
-from lexer import *
+from lexer import getToken, globales as lexer_globales, line_colum_error
 from globalTypes import TreeNode
 
 global token, tokenString
+token = None
+tokenString = None
+tokenPos = 0
+Error = False
+imprimeScanner = False
+indentno = 0
 
+def globales(prog, pos, long):
+    global programa, posicion, progLong
 
+    programa = prog
+    posicion = pos
+    progLong = long
+
+    lexer_globales(prog, pos, long)
 def match(expected):
-    global token, tokenString
-    
-    if (token == expected):
-        token, tokenString = getToken()
+    global token, tokenString, tokenPos
+
+    if token == expected:
+        token, tokenString, tokenPos = getToken(imprimeScanner)
     else:
         syntaxisError(f"expected {expected}, got {token}")
+        panicMode()
 
 def program():
     t =  declaration_list()
@@ -110,7 +124,7 @@ def var_declaration(type_v,vari):
     elif token == TokenType.LBRACKET:
         t = newDeclNode(DeclKind.VarK)
         t.type = type_v
-        t.name = var
+        t.name = vari
 
         match(TokenType.LBRACKET)
         match(TokenType.NUM)
@@ -289,13 +303,14 @@ def expression():
             match(TokenType.ASSIGN)
             p.child[1] = expression()
             return p
+        return t 
     else:
         return simple_expression()
 
 def var():
     vari = tokenString
     match(TokenType.ID)
-    t = newDeclNode(ExpKind.IdK)
+    t = newExpNode(ExpKind.IdK)
     t.name = vari
     
     if token == TokenType.LBRACKET:
@@ -321,7 +336,7 @@ def simple_expression():
         p. child[0] = t
         p.op = token     # Use of AI to understand that the operator must be save before it consume it by the function
         relop()
-        p.child[1] = additive_expression
+        p.child[1] = additive_expression()
         t = p
     return t 
 
@@ -352,7 +367,7 @@ def additive_expression():
 
     while token == TokenType.PLUS or token == TokenType.MINUS:
         p = newExpNode(ExpKind.OpK)
-        p.child[1] = term()
+        p.child[0] = t
         p.op = token
 
         addop()
@@ -448,7 +463,6 @@ def call():
         syntaxisError("expected ID after declaration")
         return None
 
-# Chat
 def args():
     if token == TokenType.RPAREN:
         return None
@@ -473,15 +487,13 @@ def arg_list():
 # node for syntax tree construction     
 def newDeclNode(kind):
     t = TreeNode();
-    if (t==None):
-        print("Out of memory error at line " + nextline)
-    else:
-        #for i in range(MAXCHILDREN):
-        #    t.child[i] = None
-        #t.sibling = None
-        t.nodekind = NodeKind.DeclK
-        t.decl = kind
-        t.nextline = nextline
+    
+    #for i in range(MAXCHILDREN):
+    #    t.child[i] = None
+    #t.sibling = None
+    t.nodekind = NodeKind.DeclK
+    t.decl = kind
+    #t.nextline = nextline
     return t
 
 
@@ -490,50 +502,119 @@ def newDeclNode(kind):
 # node for syntax tree construction
 def newStmtNode(kind):
     t = TreeNode();
-    if (t==None):
-        print("Out of memory error at line " + nextline)
-    else:
-        #for i in range(MAXCHILDREN):
-        #    t.child[i] = None
-        #t.sibling = None
-        t.nodekind = NodeKind.StmtK
-        t.stmt = kind
-        t.nextline = nextline
+    
+    #for i in range(MAXCHILDREN):
+    #    t.child[i] = None
+    #t.sibling = None
+    t.nodekind = NodeKind.StmtK
+    t.stmt = kind
+    #t.nextline = nextline
     return t
 
 # Function newExpNode creates a new expression 
 # node for syntax tree construction
 def newExpNode(kind):
     t = TreeNode()
-    if (t==None):
-        print("Out of memory error at line " + nextline)
-    else:
-        #for i in range(MAXCHILDREN):
-        #    t.child[i] = None
-        #t.sibling = None
-        t.nodekind = NodeKind.ExpK
-        t.exp = kind
-        t.nextline = nextline
-#        t.type = ExpType.Void
+    #for i in range(MAXCHILDREN):
+    #    t.child[i] = None
+    #t.sibling = None
+    t.nodekind = NodeKind.ExpK
+    t.exp = kind
+    #t.nextline = nextline
+    #t.type = ExpType.Void
     return t
 
 def syntaxisError(message):
     global Error
 
-    print(f"Sintáctico: {message}")
-    print("Token actual: ", token, tokenString)
+    line_num, text_line, column = line_colum_error(programa, tokenPos)
+
+    print(f"Línea {line_num}: Error sintáctico: {message}")
+    print(text_line)
+    print(" " * column + "^")
+
     Error = True
 
+def panicMode():
+    global token, tokenString, tokenPos
 
-def parse(imprime = True):
-    global token, tokenString, Error
-    Error =  False
-    token, tokenString = getToken()
-    
+    sync_tokens = {
+        TokenType.SEMI,
+        TokenType.RBRACE,
+        TokenType.ELSE,
+        TokenType.ENDFILE
+    }
+
+    # ChatGPT was used to understand how to implement it with sync tokens.
+    while token not in sync_tokens:
+        token, tokenString, tokenPos = getToken(imprimeScanner)
+
+    if token == TokenType.SEMI:
+        token, tokenString, tokenPos = getToken(imprimeScanner)
+
+# printSpaces indents by printing spaces */
+def printSpaces():
+    print(" "*indentno, end = "")
+
+# procedure printTree prints a syntax tree to the 
+# listing file using indentation to indicate subtrees
+def printTree(tree):
+    global indentno
+
+    indentno += 2
+
+    while tree is not None:
+        printSpaces()
+
+        if tree.nodekind == NodeKind.DeclK:
+            if tree.decl == DeclKind.VarK:
+                print("Var declaration:", tree.name)
+            elif tree.decl == DeclKind.FunK:
+                print("Function declaration:", tree.name)
+            elif tree.decl == DeclKind.ParamK:
+                print("Param:", tree.name)
+
+        elif tree.nodekind == NodeKind.StmtK:
+            if tree.stmt == StmtKind.CompoundK:
+                print("Compound statement")
+            elif tree.stmt == StmtKind.IfK:
+                print("If")
+            elif tree.stmt == StmtKind.WhileK:
+                print("While")
+            elif tree.stmt == StmtKind.ReturnK:
+                print("Return")
+
+        elif tree.nodekind == NodeKind.ExpK:
+            if tree.exp == ExpKind.OpK:
+                print("Op:", tree.op)
+            elif tree.exp == ExpKind.ConstK:
+                print("Const:", tree.val)
+            elif tree.exp == ExpKind.IdK:
+                print("Id:", tree.name)
+            elif tree.exp == ExpKind.CallK:
+                print("Call:", tree.name)
+            elif tree.exp == ExpKind.AssignK:
+                print("Assign")
+
+        for i in range(MAXCHILDREN):
+            printTree(tree.child[i])
+
+        tree = tree.sibling
+
+    indentno -= 2#UNINDENT
+
+def parser(imprime = True):
+    global token, tokenString,tokenPos, Error
+
+    Error = False
+    token, tokenString, tokenPos = getToken(imprimeScanner)
     t = program()
+
     if (token != TokenType.ENDFILE):
-        SyntaxError("Code ends before file\n")
-#    if imprime:
- #       printTree(t)
+        syntaxisError("Code ends before file\n")
+
+    if imprime:
+        printTree(t)
+
     return t, Error
 
