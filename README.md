@@ -1,3 +1,21 @@
+## Estructura del Proyecto
+```
+📁 Compilador
+ ├── 📂 Docs
+ │    ├── 📄 Analizador_Lexico.pdf
+ |    ├── 📄 dfa_lexer.jff
+ │    └── 📄 Lenguaje_C-.pdf 
+ ├── 🐍 globalTypes.py
+ ├── 🐍 lexer.py
+ ├── 🐍 parser.py
+ ├── 📄 prueba.c-
+ ├── 🐍 script.py
+ ├── 🐍 semantica.py
+ ├── 🐍 symtab.py
+ ├── 📄 .gitgnore
+ └── 📄 README.md
+```
+---
 ## Sintaxis de C-
     Una gramaática BNF para C:
         1. program -> declaration-list
@@ -30,8 +48,9 @@
         28. args -> arg-list | empty
         29. arg-list -> arg-list, expression | expression 
 
-
+---
 ## Diagrama de texto 
+```
 parser
 └── program
     └── declaration_list
@@ -66,3 +85,5 @@ parser
                             ├── selection_stmt
                             ├── iteration_stmt
                             └── return_stmt
+
+```
