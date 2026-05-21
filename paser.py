@@ -621,5 +621,5 @@ def parser(imprime = True):
     if imprime:
         printTree(t)
 
-    return t, Error
+    return t #, Error
 
