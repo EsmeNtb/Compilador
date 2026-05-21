@@ -1,6 +1,6 @@
 from globalTypes import*
-
 from paser import * 
+from semantica import * 
 
 #print(TokenType.KALTXI)
 #print(TokenType.FRAPO)
@@ -14,8 +14,11 @@ posicion = 0
 
 # Función para pasar los valores iniciales de las variables globales
 globales(programa, posicion, progLong)
-AST = parser(True)
+#AST = parser(True)
 
 # token,tokenString = getToken()
 # while (token != TokenType.ENDFILE):
 #     token, tokenString = getToken()
+
+AST = parser(True)
+semantica(AST, True)
